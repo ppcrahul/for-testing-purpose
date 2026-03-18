@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AuthApp{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <p class="card-subtitle" style="margin-bottom: 0.5rem;">🎉 You are logged in</p>
+  <h1 class="welcome-heading">Hello, <span>{{ user['username'] }}</span>!</h1>
+  <p style="color: var(--muted); font-size: 0.95rem;">Here's your account information below.</p>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="label">User ID</div>
+      <div class="value">#{{ user['id'] }}</div>
+    </div>
+
+    <div class="info-card">
+      <div class="label">Status</div>
+      <div class="value"><span class="badge">✓ Active</span></div>
+    </div>
+
+    <div class="info-card">
+      <div class="label">Username</div>
+      <div class="value">{{ user['username'] }}</div>
+    </div>
+
+    <div class="info-card">
+      <div class="label">Email</div>
+      <div class="value">{{ user['email'] }}</div>
+    </div>
+
+    <div class="info-card" style="grid-column: 1 / -1;">
+      <div class="label">Member Since</div>
+      <div class="value">{{ user['created'] }}</div>
+    </div>
+  </div>
+
+  <a href="{{ url_for('logout') }}" class="logout-btn">↩ Logout</a>
+</div>
+{% endblock %}

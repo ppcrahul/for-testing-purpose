@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}AuthApp{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d0f;
+      --surface:  #141418;
+      --border:   #2a2a35;
+      --accent:   #7c6aff;
+      --accent2:  #ff6ac1;
+      --text:     #f0eff5;
+      --muted:    #7a7a90;
+      --success:  #4ade80;
+      --error:    #f87171;
+      --warning:  #fbbf24;
+      --info:     #60a5fa;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Noise texture overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow blobs */
+    body::after {
+      content: '';
+      position: fixed;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(124,106,255,0.12) 0%, transparent 70%);
+      top: -100px; left: -100px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main { flex: 1; position: relative; z-index: 1; }
+
+    /* ── Nav ── */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(13,13,15,0.8);
+      backdrop-filter: blur(12px);
+      position: sticky; top: 0; z-index: 100;
+    }
+
+    .nav-brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .nav-links { display: flex; gap: 0.75rem; align-items: center; }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); background: var(--border); }
+    .nav-links a.btn-nav {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 500;
+    }
+    .nav-links a.btn-nav:hover { background: #6a58f0; }
+
+    /* ── Flash Messages ── */
+    .flashes {
+      max-width: 460px;
+      margin: 1.5rem auto 0;
+      padding: 0 1rem;
+    }
+
+    .flash {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid;
+      animation: slideIn 0.3s ease;
+    }
+    .flash.success { background: rgba(74,222,128,0.1); border-color: var(--success); color: var(--success); }
+    .flash.error   { background: rgba(248,113,113,0.1); border-color: var(--error);   color: var(--error);   }
+    .flash.warning { background: rgba(251,191,36,0.1);  border-color: var(--warning); color: var(--warning); }
+    .flash.info    { background: rgba(96,165,250,0.1);  border-color: var(--info);    color: var(--info);    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 420px;
+      width: 100%;
+      margin: 3rem auto;
+      box-shadow: 0 0 60px rgba(124,106,255,0.06);
+    }
+
+    .card-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      margin-bottom: 0.35rem;
+    }
+
+    .card-subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 1.2rem; }
+
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,106,255,0.15);
+    }
+    input::placeholder { color: #3a3a50; }
+
+    .btn {
+      width: 100%;
+      padding: 0.85rem;
+      background: linear-gradient(135deg, var(--accent), #6055e0);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.75rem;
+      transition: transform 0.15s, box-shadow 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(124,106,255,0.35);
+    }
+    .btn:active { transform: translateY(0); }
+
+    .card-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .card-footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .card-footer a:hover { text-decoration: underline; }
+
+    /* ── Dashboard ── */
+    .dashboard { max-width: 800px; margin: 3rem auto; padding: 0 1rem; }
+
+    .welcome-heading {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .welcome-heading span {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .info-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .info-card .label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .info-card .value { font-size: 1.05rem; font-weight: 500; margin-top: 0.4rem; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: rgba(124,106,255,0.15);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .logout-btn {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.65rem 1.5rem;
+      background: rgba(248,113,113,0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover { background: rgba(248,113,113,0.2); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-brand">⚡ AuthApp</a>
+    <div class="nav-links">
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('logout') }}" class="btn-nav">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}" class="btn-nav">Register</a>
+      {% endif %}
+    </div>
+  </nav>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>Built with Flask · Python · SQLite</footer>
+</body>
+</html>
